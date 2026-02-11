@@ -1,0 +1,857 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistem Pajak - Desa Bojonggaok</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        :root {
+            --primary: #2E7D32;
+            --primary-dark: #1B5E20;
+            --sidebar-bg: #14532d;
+            --secondary: #FFC107;
+            --danger: #DC2626;
+            --success: #10B981;
+            --bg-light: #F3F4F6;
+            --text-dark: #1F2937;
+            --border: #E5E7EB;
+            --white: #ffffff;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; }
+
+        body {
+            background-color: var(--bg-light);
+            color: var(--text-dark);
+            display: flex;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        /* ============================
+           HALAMAN LOGIN STYLES
+           ============================ */
+        .login-overlay {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: url('https://picsum.photos/seed/villageview/1920/1080.jpg') no-repeat center center/cover;
+            z-index: 9999; /* Di atas segalanya */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            transition: opacity 0.5s ease, visibility 0.5s;
+        }
+
+        /* Kelas ini akan ditambahkan JS setelah login sukses */
+        .login-overlay.hidden {
+            opacity: 0;
+            visibility: hidden;
+            pointer-events: none;
+        }
+
+        .login-bg-filter {
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: linear-gradient(rgba(46, 125, 50, 0.8), rgba(0, 0, 0, 0.6));
+        }
+
+        .login-card {
+            background: var(--white);
+            padding: 40px;
+            border-radius: 16px;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            position: relative;
+            width: 100%;
+            max-width: 420px;
+            z-index: 2;
+        }
+
+        .logo-area { margin-bottom: 24px; }
+        .logo-icon {
+            width: 64px; height: 64px;
+            background-color: #E8F5E9;
+            color: var(--primary);
+            border-radius: 50%;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 28px;
+            margin-bottom: 16px;
+        }
+        .login-card h1 { color: var(--text-dark); font-size: 24px; font-weight: 700; margin-bottom: 8px; }
+        .login-card p.subtitle { color: var(--text-light); font-size: 14px; margin-bottom: 32px; }
+
+        .form-group { margin-bottom: 20px; text-align: left; position: relative; }
+        .form-group label { display: block; font-size: 13px; font-weight: 600; color: var(--text-dark); margin-bottom: 8px; }
+        .input-wrapper { position: relative; }
+        .input-wrapper i { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: var(--text-light); font-size: 16px; transition: color 0.2s; }
+        input {
+            width: 100%; padding: 12px 40px 12px 42px;
+            border: 1px solid var(--border); border-radius: 8px;
+            font-size: 14px; outline: none; transition: all 0.2s;
+        }
+        input:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(46, 125, 50, 0.2); }
+        input:focus + i { color: var(--primary); }
+        .toggle-password { position: absolute; right: 14px; left: auto !important; cursor: pointer; }
+        
+        .error-msg {
+            color: var(--danger); font-size: 12px; margin-top: 6px;
+            display: flex; align-items: center; gap: 5px;
+            opacity: 0; transform: translateY(-5px); transition: all 0.2s; height: 0; overflow: hidden;
+        }
+        .error-msg.visible { opacity: 1; transform: translateY(0); height: auto; margin-top: 8px; }
+
+        .btn-login {
+            width: 100%; padding: 14px; background-color: var(--primary);
+            color: white; border: none; border-radius: 8px; font-size: 16px;
+            font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px;
+        }
+        .btn-login:disabled { background-color: #A5D6A7; cursor: not-allowed; }
+        .spinner { width: 20px; height: 20px; border: 2px solid rgba(255, 255, 255, 0.3); border-radius: 50%; border-top-color: #fff; animation: spin 0.8s linear infinite; display: none; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .shake { animation: shake 0.5s cubic-bezier(.36,.07,.19,.97) both; }
+        @keyframes shake {
+            10%, 90% { transform: translate3d(-1px, 0, 0); } 20%, 80% { transform: translate3d(2px, 0, 0); }
+            30%, 50%, 70% { transform: translate3d(-4px, 0, 0); } 40%, 60% { transform: translate3d(4px, 0, 0); }
+        }
+
+        /* ============================
+           DASHBOARD STYLES
+           ============================ */
+        /* Sidebar */
+        .sidebar {
+            width: 260px; background-color: var(--sidebar-bg); color: var(--white);
+            display: flex; flex-direction: column; flex-shrink: 0;
+            transition: width 0.3s ease, padding 0.3s ease, opacity 0.3s ease;
+            opacity: 1; overflow: hidden; white-space: nowrap;
+        }
+        .sidebar.collapsed { width: 0; padding: 0; opacity: 0; border: none; }
+        .sidebar-header { padding: 1.5rem; text-align: center; border-bottom: 1px solid rgba(255,255,255,0.1); min-width: 200px; }
+        .sidebar-header h2 { font-size: 1.2rem; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 5px; }
+        .sidebar-header p { font-size: 0.8rem; opacity: 0.8; }
+        .nav-menu { list-style: none; padding: 1rem 0; flex: 1; overflow-y: auto; }
+        .nav-item {
+            padding: 0.8rem 1.5rem; cursor: pointer; display: flex; align-items: center; gap: 12px;
+            color: rgba(255,255,255,0.7); transition: all 0.2s; border-left: 4px solid transparent; font-weight: 500; min-width: 200px;
+        }
+        .nav-item:hover, .nav-item.active { background-color: rgba(255,255,255,0.1); color: var(--white); border-left-color: var(--secondary); }
+        .nav-item i { width: 20px; text-align: center; }
+        .sidebar-footer { padding: 1.5rem; border-top: 1px solid rgba(255,255,255,0.1); font-size: 0.8rem; text-align: center; opacity: 0.6; min-width: 200px; }
+
+        /* Main Content */
+        .main-content {
+            flex: 1; display: flex; flex-direction: column; overflow: hidden; transition: margin 0.3s ease;
+        }
+        header {
+            background-color: var(--white); color: var(--text-dark); padding: 1.5rem 2rem;
+            display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 4px rgba(0,0,0,0.05); z-index: 10;
+        }
+        .header-left { display: flex; align-items: center; flex: 1; justify-content: space-between; }
+        .header-title-group { display: flex; align-items: center; }
+        
+        .btn-toggle-sidebar {
+            background: none; border: none; font-size: 1.5rem; color: var(--primary);
+            cursor: pointer; margin-right: 1.5rem; padding: 0.5rem; border-radius: 50%; transition: background 0.2s;
+        }
+        .btn-toggle-sidebar:hover { background-color: #f0fdf4; }
+
+        .header-info { flex: 1; text-align: center; }
+        .header-info h1 { font-size: 1.4rem; font-weight: 900; text-transform: uppercase; color: var(--primary); margin-bottom: 0.2rem; }
+        .header-info p { font-size: 0.9rem; font-weight: 700; color: #666; text-transform: uppercase; }
+        
+        .active-year-badge {
+            background-color: var(--secondary); color: #78350F; padding: 6px 12px;
+            border-radius: 20px; font-weight: 800; font-size: 0.9rem;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1); cursor: pointer; transition: transform 0.2s;
+        }
+        .active-year-badge:hover { transform: scale(1.05); }
+        
+        .btn-logout {
+            background: #FEE2E2; border: 1px solid #FCA5A5; color: var(--danger);
+            padding: 8px 16px; border-radius: 6px; cursor: pointer; transition: all 0.2s;
+            text-decoration: none; font-size: 0.9rem; font-weight: 600; margin-left: 1rem;
+        }
+        .btn-logout:hover { background: #FECACA; }
+
+        .pages-container { flex: 1; overflow-y: auto; padding: 2rem; position: relative; }
+        .page-section { display: none; animation: fadeIn 0.3s ease-in-out; }
+        .page-section.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* Year Selection */
+        .year-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 1.5rem; margin-bottom: 2rem; }
+        .year-card {
+            background: white; border-radius: 12px; padding: 2rem 1rem; text-align: center; cursor: pointer;
+            border: 2px solid transparent; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); transition: all 0.2s;
+        }
+        .year-card:hover { transform: translateY(-5px); box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); }
+        .year-card.active { border-color: var(--primary); background-color: #f0fdf4; }
+        .year-card h3 { font-size: 1.5rem; font-weight: 900; color: var(--text-dark); margin-bottom: 0.5rem; }
+        .year-card p { font-size: 0.8rem; color: #666; }
+        .add-year-card {
+            border: 2px dashed #ccc; display: flex; flex-direction: column;
+            align-items: center; justify-content: center; background: #fafafa;
+        }
+        .add-year-card:hover { border-color: var(--primary); color: var(--primary); }
+
+        /* Cards */
+        .dashboard-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1.5rem; margin-bottom: 2rem; }
+        .card {
+            background: white; padding: 1.5rem; border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
+            display: flex; align-items: center; gap: 1rem;
+        }
+        .card-icon { width: 50px; height: 50px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; }
+        .card-info h3 { font-size: 0.85rem; color: #6B7280; font-weight: 500; margin-bottom: 5px; line-height: 1.2; }
+        .card-info p { font-size: 1.2rem; font-weight: 700; color: var(--text-dark); }
+
+        /* Table & Form */
+        .toolbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem; }
+        .page-title { font-size: 1.5rem; font-weight: 700; color: var(--primary-dark); }
+        .search-container { flex: 1; max-width: 400px; position: relative; }
+        .search-input {
+            width: 100%; padding: 10px 10px 10px 40px; border: 1px solid var(--border);
+            border-radius: 8px; font-size: 0.9rem; outline: none; transition: border 0.2s;
+        }
+        .search-input:focus { border-color: var(--primary); box-shadow: 0 0 0 2px rgba(46, 125, 50, 0.2); }
+        .search-icon { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: #9CA3AF; }
+        .btn-add {
+            background-color: var(--primary); color: white; border: none; padding: 10px 20px;
+            border-radius: 8px; font-weight: 500; cursor: pointer; display: flex; align-items: center; gap: 8px;
+            transition: background 0.2s; white-space: nowrap;
+        }
+        .btn-add:hover { background-color: var(--primary-dark); }
+        .table-container { background: var(--white); border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05); overflow-x: auto; }
+        table { width: 100%; border-collapse: collapse; min-width: 1500px; }
+        thead { background-color: #F9FAFB; border-bottom: 2px solid var(--border); }
+        th, td { padding: 12px 14px; text-align: left; border-bottom: 1px solid var(--border); font-size: 0.85rem; white-space: nowrap; }
+        th { font-weight: 600; color: #4B5563; text-transform: uppercase; font-size: 0.7rem; letter-spacing: 0.05em; }
+        tbody tr:hover { background-color: #F3F4F6; }
+        .text-bold-primary { font-weight: 700; color: var(--primary-dark); }
+        .text-danger { color: var(--danger); font-weight: 600; }
+        .badge { padding: 4px 10px; border-radius: 20px; font-size: 0.75rem; font-weight: 700; display: inline-block; }
+        .badge-lunas { background-color: #D1FAE5; color: #065F46; }
+        .badge-belum { background-color: #FEE2E2; color: #991B1B; }
+        .action-btn { border: none; background: none; cursor: pointer; padding: 6px; border-radius: 4px; transition: background 0.2s; }
+        .btn-edit { color: #2563EB; } .btn-edit:hover { background: #DBEAFE; }
+        .btn-delete { color: #DC2626; } .btn-delete:hover { background: #FEE2E2; }
+
+        /* Modal */
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.5); display: flex; justify-content: center; align-items: center;
+            z-index: 2000; opacity: 0; visibility: hidden; transition: all 0.3s;
+        }
+        .modal-overlay.active { opacity: 1; visibility: visible; }
+        .modal {
+            background: white; padding: 2rem; border-radius: 12px; width: 100%; max-width: 700px;
+            box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1); transform: translateY(20px);
+            transition: transform 0.3s; max-height: 90vh; overflow-y: auto;
+        }
+        .modal-overlay.active .modal { transform: translateY(0); }
+        .modal-header { margin-bottom: 1.5rem; display: flex; justify-content: space-between; align-items: center; }
+        .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+        .form-group { margin-bottom: 1rem; }
+        .form-group.full-width { grid-column: span 2; }
+        label { display: block; font-size: 0.85rem; font-weight: 500; margin-bottom: 6px; color: #374151; }
+        input[readonly] { background-color: #F3F4F6; color: #6B7280; cursor: not-allowed; }
+        input, select { width: 100%; padding: 10px; border: 1px solid var(--border); border-radius: 6px; font-size: 0.9rem; outline: none; }
+        input:focus, select:focus { border-color: var(--primary); box-shadow: 0 0 0 2px rgba(46, 125, 50, 0.2); }
+        .modal-actions { margin-top: 2rem; display: flex; justify-content: flex-end; gap: 1rem; }
+        .btn-cancel { background: white; border: 1px solid var(--border); padding: 10px 20px; border-radius: 6px; cursor: pointer; font-weight: 500; }
+        .btn-save { background: var(--primary); color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-weight: 500; }
+        .info-text { font-size: 0.75rem; color: var(--primary-dark); margin-top: 4px; font-weight: 500; display: block; }
+
+        /* Color Utils */
+        .bg-blue { background-color: #DBEAFE; color: #1E40AF; }
+        .bg-green { background-color: #D1FAE5; color: #065F46; }
+        .bg-red { background-color: #FEE2E2; color: #991B1B; }
+        .bg-yellow { background-color: #FEF3C7; color: #92400E; }
+        .bg-purple { background-color: #EDE9FE; color: #5B21B6; }
+        .bg-orange { background-color: #FFEDD5; color: #9A3412; }
+        .bg-teal { background-color: #CCFBF1; color: #115E59; }
+        .bg-pink { background-color: #FCE7F3; color: #9D174D; }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .sidebar { position: fixed; z-index: 50; height: 100vh; top: 0; left: 0; transform: translateX(-100%); width: 260px; }
+            .sidebar.mobile-active { transform: translateX(0); width: 260px; }
+            .sidebar.collapsed { transform: translateX(-100%); }
+            .sidebar-header, .sidebar-footer, .nav-item { min-width: auto; }
+            .nav-menu { display: block; }
+            .main-content { width: 100%; }
+            header { flex-direction: column; text-align: center; gap: 1rem; padding: 1rem; position: relative; }
+            .header-left { width: 100%; justify-content: space-between; }
+            .header-info { width: 100%; order: 2; }
+            .btn-logout { position: static; width: 100%; margin-left:0; }
+            .btn-toggle-sidebar { position: absolute; left: 1rem; top: 1rem; z-index: 60; order: 1; }
+            .form-grid { grid-template-columns: 1fr; }
+            .form-group.full-width { grid-column: span 1; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- 1. HALAMAN LOGIN (Overlay) -->
+    <section class="login-overlay" id="loginSection">
+        <div class="login-bg-filter"></div>
+        <div class="login-card">
+            <div class="logo-area">
+                <div class="logo-icon">
+                    <i class="fa-solid fa-landmark"></i>
+                </div>
+                <h1>Login Pajak Desa</h1>
+                <p class="subtitle">Silakan masuk untuk melihat tagihan.</p>
+            </div>
+
+            <form id="loginForm" novalidate>
+                <div class="form-group">
+                    <label for="username">Username / NIK</label>
+                    <div class="input-wrapper">
+                        <i class="fa-solid fa-user"></i>
+                        <input type="text" id="username" placeholder="Masukkan username Anda" autocomplete="off">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="password">Kata Sandi</label>
+                    <div class="input-wrapper">
+                        <i class="fa-solid fa-lock"></i>
+                        <input type="password" id="password" placeholder="Masukkan kata sandi">
+                        <i class="fa-solid fa-eye toggle-password" id="togglePassword"></i>
+                    </div>
+                    <div id="passwordError" class="error-msg">
+                        <i class="fa-solid fa-circle-exclamation"></i>
+                        <span>Username atau password salah.</span>
+                    </div>
+                </div>
+
+                <button type="submit" class="btn-login" id="loginBtn">
+                    <span class="btn-text">Masuk</span>
+                    <div class="spinner"></div>
+                </button>
+            </form>
+        </div>
+    </section>
+
+    <!-- 2. DASHBOARD (Awalnya tersembunyi di belakang login) -->
+    <aside class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <h2>Simpay Desa</h2>
+            <p>Admin Panel</p>
+        </div>
+        <ul class="nav-menu">
+            <li class="nav-item" onclick="switchPage('dashboard-home')">
+                <i class="fa-solid fa-chart-pie"></i> Beranda
+            </li>
+            <li class="nav-item" onclick="switchPage('data-tahunan')">
+                <i class="fa-regular fa-calendar"></i> Data Tahunan
+            </li>
+            <li class="nav-item active" onclick="switchPage('data-pajak')">
+                <i class="fa-solid fa-table-list"></i> Data Pajak
+            </li>
+            <li class="nav-item" onclick="alert('Fitur Laporan belum tersedia')">
+                <i class="fa-solid fa-print"></i> Laporan
+            </li>
+            <li class="nav-item" onclick="alert('Fitur Pengaturan belum tersedia')">
+                <i class="fa-solid fa-gear"></i> Pengaturan
+            </li>
+        </ul>
+        <div class="sidebar-footer">
+            &copy; 2023 Pemdes Bojonggaok
+        </div>
+    </aside>
+
+    <div class="main-content">
+        <header>
+            <div class="header-left">
+                <button class="btn-toggle-sidebar" id="sidebarToggle" title="Toggle Menu">
+                    <i class="fa-solid fa-bars"></i>
+                </button>
+                
+                <div class="header-info">
+                    <h1>Sistem Informasi Pajak Desa</h1>
+                    <p>Desa Bojonggaok, Kec. Jamanis, Kab. Tasikmalaya</p>
+                </div>
+
+                <div class="active-year-badge" onclick="switchPage('data-tahunan')" title="Ganti Tahun">
+                    TAHUN: <span id="headerYear">2026</span> <i class="fa-solid fa-caret-down" style="margin-left:5px;"></i>
+                </div>
+            </div>
+            <button class="btn-logout" onclick="handleLogout()">
+                <i class="fa-solid fa-right-from-bracket"></i> Logout
+            </button>
+        </header>
+
+        <div class="pages-container">
+            
+            <!-- HALAMAN: DATA TAHUNAN -->
+            <section id="page-data-tahunan" class="page-section">
+                <h2 style="margin-bottom: 1.5rem; color: var(--primary-dark);">Pilih Tahun Anggaran</h2>
+                <div class="year-grid" id="yearGrid"></div>
+                <div style="background: white; padding: 2rem; border-radius: 12px; text-align: center; color: #666; margin-top: 2rem;">
+                    <p>Klik tahun di atas untuk melihat atau menginput pembayaran pada tahun tersebut.</p>
+                    <p>Data wajib pajak akan tetap sama, namun status pembayaran akan di-reset per tahun.</p>
+                </div>
+            </section>
+
+            <!-- HALAMAN: DASHBOARD SUMMARY -->
+            <section id="page-dashboard-home" class="page-section">
+                <h2 style="margin-bottom: 1.5rem; color: var(--primary-dark);">Ringkasan Pajak Tahun <span id="dashboardYearText">2026</span></h2>
+                
+                <div class="dashboard-grid">
+                    <div class="card">
+                        <div class="card-icon bg-purple"><i class="fa-solid fa-layer-group"></i></div>
+                        <div class="card-info"><h3>Jumlah Objek</h3><p id="total-objek">0</p></div>
+                    </div>
+                    <div class="card">
+                        <div class="card-icon bg-teal"><i class="fa-solid fa-map"></i></div>
+                        <div class="card-info"><h3>Total Luas Tanah</h3><p id="total-luas-tanah">0 m²</p></div>
+                    </div>
+                    <div class="card">
+                        <div class="card-icon bg-orange"><i class="fa-solid fa-building"></i></div>
+                        <div class="card-info"><h3>Total Luas Bangunan</h3><p id="total-luas-bangunan">0 m²</p></div>
+                    </div>
+                    <div class="card">
+                        <div class="card-icon bg-pink"><i class="fa-solid fa-file-invoice-dollar"></i></div>
+                        <div class="card-info"><h3>Pokok Ketetapan</h3><p id="total-ketetapan">Rp 0</p></div>
+                    </div>
+                    <div class="card">
+                        <div class="card-icon bg-blue"><i class="fa-solid fa-users"></i></div>
+                        <div class="card-info"><h3>Total Wajib Pajak</h3><p id="total-wp">0</p></div>
+                    </div>
+                    <div class="card">
+                        <div class="card-icon bg-green"><i class="fa-solid fa-money-bill-wave"></i></div>
+                        <div class="card-info"><h3>Uang Masuk</h3><p id="total-masuk" style="font-size: 1.2rem;">Rp 0</p></div>
+                    </div>
+                    <div class="card">
+                        <div class="card-icon bg-red"><i class="fa-solid fa-file-invoice-dollar"></i></div>
+                        <div class="card-info"><h3>Tunggakan (Sisa)</h3><p id="total-sisa" style="font-size: 1.2rem;">Rp 0</p></div>
+                    </div>
+                    <div class="card">
+                        <div class="card-icon bg-yellow"><i class="fa-solid fa-check-circle"></i></div>
+                        <div class="card-info"><h3>Status Lunas</h3><p id="status-lunas">0</p></div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- HALAMAN: DATA PAJAK (TABEL) -->
+            <section id="page-data-pajak" class="page-section">
+                <div class="toolbar">
+                    <h2 class="page-title">Data Pajak Tahun <span id="tableYearText">2026</span></h2>
+                    
+                    <div class="search-container">
+                        <i class="fa-solid fa-magnifying-glass search-icon"></i>
+                        <input type="text" class="search-input" id="searchInput" placeholder="Cari berdasarkan Nama, NOP, atau NIK...">
+                    </div>
+
+                    <button class="btn-add" onclick="openModal('add')">
+                        <i class="fa-solid fa-plus"></i> Tambah Data
+                    </button>
+                </div>
+
+                <div class="table-container">
+                    <table id="pajakTable">
+                        <thead>
+                            <tr>
+                                <th width="3%">NO</th>
+                                <th width="9%">NOP</th>
+                                <th width="9%">NIK</th>
+                                <th width="12%">NAMA WP</th>
+                                <th width="10%">JENIS TANAH</th>
+                                <th width="8%">L. TANAH (M²)</th>
+                                <th width="8%">L. BANGUNAN (M²)</th>
+                                <th width="10%">PAJAK TERHUTANG</th>
+                                <th width="10%">JUMLAH BAYAR</th>
+                                <th width="8%">SISA</th>
+                                <th width="6%">STATUS</th>
+                                <th width="6%">TGL BAYAR</th>
+                                <th width="3%">AKSI</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tableBody"></tbody>
+                    </table>
+                </div>
+            </section>
+
+        </div>
+    </div>
+
+    <!-- Modal Form -->
+    <div class="modal-overlay" id="modalOverlay">
+        <div class="modal">
+            <div class="modal-header">
+                <h3 id="modalTitle">Tambah Data Pajak</h3>
+                <button onclick="closeModal()" style="border:none;background:none;font-size:1.2rem;cursor:pointer;">&times;</button>
+            </div>
+            <form id="pajakForm">
+                <input type="hidden" id="editIndex">
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label>NOP (Kode Wilayah)</label>
+                        <input type="text" id="inputNop" placeholder="006.0123-0" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Nomor Induk (NIK)</label>
+                        <input type="text" id="inputNik" placeholder="Opsional">
+                    </div>
+                    <div class="form-group full-width">
+                        <label>Nama Wajib Pajak</label>
+                        <input type="text" id="inputNama" placeholder="Nama lengkap" required>
+                    </div>
+                    <div class="form-group full-width">
+                        <label>Alamat Objek/WP</label>
+                        <input type="text" id="inputAlamat" placeholder="Alamat lengkap" required>
+                    </div>
+                    <div class="form-group full-width">
+                        <label>Jenis Tanah</label>
+                        <select id="inputJenisTanah" required>
+                            <option value="" disabled selected>Pilih Jenis Tanah...</option>
+                            <option value="Tanah Sawah">Tanah Sawah</option>
+                            <option value="Kolam">Kolam</option>
+                            <option value="Tanah Berdiri Bangunan">Tanah Berdiri Bangunan</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Luas Tanah (m²) <span style="color:#999; font-weight:400;">- Opsional</span></label>
+                        <input type="number" id="inputLuasTanah" placeholder="0" min="0">
+                    </div>
+                    <div class="form-group">
+                        <label>Luas Bangunan (m²) <span style="color:#999; font-weight:400;">- Opsional</span></label>
+                        <input type="number" id="inputLuasBangunan" placeholder="0" min="0">
+                    </div>
+                    <div class="form-group">
+                        <label>Pajak Terhutang (Rp)</label>
+                        <input type="number" id="inputPajak" placeholder="0" min="0" required>
+                    </div>
+                    <div class="form-group">
+                        <label id="labelBayar">Tambah Pembayaran (Rp)</label>
+                        <input type="number" id="inputBayar" placeholder="0" min="0" value="0">
+                        <span id="infoTotalBayar" class="info-text" style="display:none;"></span>
+                    </div>
+                    <div class="form-group full-width" style="background: #f0fdf4; padding: 10px; border-radius: 6px; border: 1px solid #bbf7d0;">
+                        <label style="color: #166534;">Prediksi Sisa Pajak (Otomatis)</label>
+                        <input type="text" id="displaySisa" readonly value="Rp 0" style="background: transparent; border: none; font-weight: bold; color: #15803d; padding: 0;">
+                    </div>
+                    <div class="form-group full-width">
+                        <label>Tanggal Bayar Terakhir</label>
+                        <input type="date" id="inputTanggal">
+                        <small style="color:#666; font-size:0.7rem;">Kosongkan jika belum ada pembayaran.</small>
+                    </div>
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn-cancel" onclick="closeModal()">Batal</button>
+                    <button type="submit" class="btn-save">Simpan Data</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // --- LOGIKA LOGIN ---
+        const loginSection = document.getElementById('loginSection');
+        const loginForm = document.getElementById('loginForm');
+        const loginBtn = document.getElementById('loginBtn');
+        const btnText = loginBtn.querySelector('.btn-text');
+        const spinner = loginBtn.querySelector('.spinner');
+        const passwordError = document.getElementById('passwordError');
+        const togglePassword = document.getElementById('togglePassword');
+
+        const VALID_USER = "3206352002";
+        const VALID_PASS = "Bjgk2002";
+
+        togglePassword.addEventListener('click', () => {
+            const type = document.getElementById('password').getAttribute('type') === 'password' ? 'text' : 'password';
+            document.getElementById('password').setAttribute('type', type);
+            togglePassword.classList.toggle('fa-eye');
+            togglePassword.classList.toggle('fa-eye-slash');
+        });
+
+        loginForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const u = document.getElementById('username').value.trim();
+            const p = document.getElementById('password').value.trim();
+
+            passwordError.classList.remove('visible');
+            loginSection.querySelector('.login-card').classList.remove('shake');
+
+            if (!u || !p) {
+                showError("Username dan password wajib diisi.");
+                return;
+            }
+
+            setLoading(true);
+            setTimeout(() => {
+                setLoading(false);
+                if (u === VALID_USER && p === VALID_PASS) {
+                    handleLoginSuccess();
+                } else {
+                    handleError();
+                }
+            }, 1000);
+        });
+
+        function showError(msg) {
+            passwordError.querySelector('span').textContent = msg;
+            passwordError.classList.add('visible');
+            loginSection.querySelector('.login-card').classList.add('shake');
+            setTimeout(() => loginSection.querySelector('.login-card').classList.remove('shake'), 500);
+        }
+        function handleError() {
+            document.getElementById('password').value = '';
+            document.getElementById('password').focus();
+            showError("Username atau password salah.");
+        }
+        function setLoading(isLoading) {
+            loginBtn.disabled = isLoading;
+            btnText.style.display = isLoading ? 'none' : 'block';
+            spinner.style.display = isLoading ? 'block' : 'none';
+        }
+        function handleLoginSuccess() {
+            loginSection.classList.add('hidden');
+        }
+        function handleLogout() {
+            if(confirm("Apakah Anda yakin ingin keluar?")) {
+                document.getElementById('username').value = "";
+                document.getElementById('password').value = "";
+                loginSection.classList.remove('hidden');
+            }
+        }
+
+        // --- LOGIKA DASHBOARD ---
+        
+        // 1. STRUKTUR DATA
+        let wajibPajak = [
+            { nomor:1, nop:"006.0123-0", nik:"3206352002850001", nama:"Asep Sunandar", alamat:"Kp. Bojonggaok RT 01 RW 02", jenisTanah:"Tanah Sawah", luasTanah:120, luasBangunan:60, pajak:250000 },
+            { nomor:2, nop:"006.0124-1", nik:"3206352002850002", nama:"Siti Aminah", alamat:"Kp. Bojonggaok RT 02 RW 02", jenisTanah:"Kolam", luasTanah:50, luasBangunan:0, pajak:150000 },
+            { nomor:3, nop:"007.0555-2", nik:"", nama:"Budi Santoso", alamat:"Kp. Bojonggaok RT 03 RW 01", jenisTanah:"Tanah Berdiri Bangunan", luasTanah:350, luasBangunan:120, pajak:300000 }
+        ];
+
+        let dataBayarPerTahun = {
+            "2026": { "006.0123-0": { bayar:50000, tanggal:"2023-10-01" }, "006.0124-1": { bayar:150000, tanggal:"2023-10-05" }, "007.0555-2": { bayar:0, tanggal:"" } }
+        };
+
+        let tahunAktif = 2026;
+        let listTahun = ["2024", "2025", "2026", "2027", "2028", "2029", "2030"];
+
+        // DOM Elements
+        const tableBody = document.getElementById('tableBody');
+        const modalOverlay = document.getElementById('modalOverlay');
+        const pajakForm = document.getElementById('pajakForm');
+        const modalTitle = document.getElementById('modalTitle');
+        const searchInput = document.getElementById('searchInput');
+        
+        const inputPajak = document.getElementById('inputPajak');
+        const inputBayar = document.getElementById('inputBayar');
+        const displaySisa = document.getElementById('displaySisa');
+        const labelBayar = document.getElementById('labelBayar');
+        const infoTotalBayar = document.getElementById('infoTotalBayar');
+
+        // 2. FUNGSI TAHUNAN
+        function initYearData(year) {
+            if (!dataBayarPerTahun[year]) {
+                dataBayarPerTahun[year] = {};
+                wajibPajak.forEach(wp => {
+                    dataBayarPerTahun[year][wp.nop] = { bayar: 0, tanggal: "" };
+                });
+            }
+        }
+        function changeYear(year) {
+            tahunAktif = year;
+            initYearData(year);
+            document.getElementById('headerYear').textContent = tahunAktif;
+            document.getElementById('dashboardYearText').textContent = tahunAktif;
+            document.getElementById('tableYearText').textContent = tahunAktif;
+            renderYearGrid();
+            renderTable(wajibPajak);
+            updateDashboardStats();
+        }
+        function renderYearGrid() {
+            const grid = document.getElementById('yearGrid');
+            grid.innerHTML = "";
+            listTahun.forEach(year => {
+                const isActive = year == tahunAktif;
+                const card = document.createElement('div');
+                card.className = `year-card ${isActive ? 'active' : ''}`;
+                card.onclick = () => { changeYear(year); switchPage('dashboard-home'); };
+                let hasData = false;
+                if(dataBayarPerTahun[year]) hasData = Object.values(dataBayarPerTahun[year]).some(item => item.bayar > 0);
+                card.innerHTML = `<h3>${year}</h3><p>${hasData ? '<span class="badge badge-lunas">Ada Data</span>' : '<span style="color:#ccc">Kosong/Reset</span>'}</p>`;
+                grid.appendChild(card);
+            });
+            const addBtn = document.createElement('div');
+            addBtn.className = 'year-card add-year-card';
+            addBtn.innerHTML = `<i class="fa-solid fa-plus" style="font-size:2rem; color:#ccc; margin-bottom:10px;"></i><p style="font-weight:bold;">Tahun Baru</p>`;
+            addBtn.onclick = () => { const newYear = parseInt(listTahun[listTahun.length-1]) + 1; listTahun.push(newYear.toString()); renderYearGrid(); };
+            grid.appendChild(addBtn);
+        }
+
+        // 3. NAVIGASI
+        function switchPage(pageId) {
+            document.querySelectorAll('.page-section').forEach(s => s.classList.remove('active'));
+            document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
+            document.getElementById('page-' + pageId).classList.add('active');
+            document.querySelectorAll('.nav-item').forEach(item => { if(item.getAttribute('onclick').includes(pageId)) item.classList.add('active'); });
+            
+            if (window.innerWidth <= 768) {
+                document.getElementById('sidebar').classList.remove('mobile-active');
+                document.getElementById('sidebarToggle').querySelector('i').className = "fa-solid fa-bars";
+            }
+            if(pageId === 'dashboard-home') updateDashboardStats();
+            if(pageId === 'data-tahunan') renderYearGrid();
+        }
+
+        const sidebar = document.getElementById('sidebar');
+        const sidebarToggle = document.getElementById('sidebarToggle');
+        const toggleIcon = sidebarToggle.querySelector('i');
+        sidebarToggle.addEventListener('click', () => {
+            const isMobile = window.innerWidth <= 768;
+            if (isMobile) {
+                sidebar.classList.toggle('mobile-active');
+                toggleIcon.classList.toggle('fa-bars');
+                toggleIcon.classList.toggle('fa-xmark');
+            } else {
+                sidebar.classList.toggle('collapsed');
+                toggleIcon.classList.toggle('fa-bars');
+                toggleIcon.classList.toggle('fa-angles-right');
+            }
+        });
+
+        // 4. LOGIKA TABEL
+        const formatRupiah = (number) => new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(number);
+        function renderTable(dataMaster) {
+            tableBody.innerHTML = "";
+            const tahunData = dataBayarPerTahun[tahunAktif] || {};
+            if(dataMaster.length === 0) { tableBody.innerHTML = `<tr><td colspan="13" style="text-align:center; padding: 2rem;">Data tidak ditemukan.</td></tr>`; return; }
+
+            dataMaster.forEach((item, index) => {
+                const tr = document.createElement('tr');
+                const payment = tahunData[item.nop] || { bayar: 0, tanggal: "" };
+                const sisaPajak = item.pajak - payment.bayar;
+                let status = "Belum Lunas"; let statusClass = "badge-belum";
+                if (sisaPajak <= 0) { status = "Lunas"; statusClass = "badge-lunas"; }
+
+                tr.innerHTML = `
+                    <td>${item.nomor}</td>
+                    <td><span style="font-family:monospace; background:#eee; padding:2px 4px; border-radius:4px;">${item.nop}</span></td>
+                    <td>${item.nik || '-'}</td>
+                    <td>${item.nama}</td>
+                    <td>${item.jenisTanah}</td>
+                    <td>${item.luasTanah ? item.luasTanah : '-'}</td> 
+                    <td>${item.luasBangunan ? item.luasBangunan : '-'}</td> 
+                    <td>${formatRupiah(item.pajak)}</td>
+                    <td>${formatRupiah(payment.bayar)}</td>
+                    <td class="${sisaPajak > 0 ? 'text-danger' : 'text-bold-primary'}">${formatRupiah(sisaPajak)}</td>
+                    <td><span class="badge ${statusClass}">${status}</span></td>
+                    <td>${payment.tanggal || '-'}</td>
+                    <td>
+                        <button class="action-btn btn-edit" onclick="openModal('edit', ${index})" title="Edit / Tambah Bayar"><i class="fa-solid fa-pen-to-square"></i></button>
+                        <button class="action-btn btn-delete" onclick="deleteData(${index})" title="Hapus"><i class="fa-solid fa-trash"></i></button>
+                    </td>
+                `;
+                tableBody.appendChild(tr);
+            });
+        }
+
+        searchInput.addEventListener('keyup', (e) => {
+            const k = e.target.value.toLowerCase();
+            renderTable(wajibPajak.filter(item => item.nama.toLowerCase().includes(k) || item.nop.toLowerCase().includes(k) || item.nik.includes(k)));
+        });
+
+        // 5. MODAL
+        let oldBayarAmount = 0;
+        function updateLiveCalculation() {
+            const p = parseInt(inputPajak.value) || 0;
+            const b = parseInt(inputBayar.value) || 0;
+            const total = (modalTitle.textContent === "Edit Data Pajak") ? (oldBayarAmount + b) : b;
+            displaySisa.value = formatRupiah(p - total);
+        }
+        inputPajak.addEventListener('input', updateLiveCalculation);
+        inputBayar.addEventListener('input', updateLiveCalculation);
+
+        window.openModal = function(mode, index = null) {
+            modalOverlay.classList.add('active');
+            const editIndexInput = document.getElementById('editIndex');
+            const tahunData = dataBayarPerTahun[tahunAktif] || {};
+            if (mode === 'edit') {
+                modalTitle.textContent = "Edit Data Pajak";
+                editIndexInput.value = index;
+                const d = wajibPajak[index];
+                const pay = tahunData[d.nop] || { bayar: 0, tanggal: "" };
+                document.getElementById('inputNop').value = d.nop;
+                document.getElementById('inputNik').value = d.nik;
+                document.getElementById('inputNama').value = d.nama;
+                document.getElementById('inputAlamat').value = d.alamat;
+                document.getElementById('inputJenisTanah').value = d.jenisTanah;
+                document.getElementById('inputLuasTanah').value = d.luasTanah || ""; 
+                document.getElementById('inputLuasBangunan').value = d.luasBangunan || ""; 
+                document.getElementById('inputPajak').value = d.pajak;
+                document.getElementById('inputTanggal').value = pay.tanggal;
+                oldBayarAmount = pay.bayar; document.getElementById('inputBayar').value = 0; 
+                labelBayar.textContent = "Tambah Pembayaran (Rp)";
+                infoTotalBayar.textContent = `Total saat ini: ${formatRupiah(pay.bayar)}`; infoTotalBayar.style.display = "block";
+                updateLiveCalculation();
+            } else {
+                modalTitle.textContent = "Tambah Data Pajak";
+                editIndexInput.value = "-1"; pajakForm.reset();
+                document.getElementById('inputBayar').value = "0"; oldBayarAmount = 0;
+                labelBayar.textContent = "Bayar Awal (Rp)"; infoTotalBayar.style.display = "none"; updateLiveCalculation();
+            }
+        };
+        window.closeModal = function() { modalOverlay.classList.remove('active'); };
+        pajakForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            const idx = parseInt(document.getElementById('editIndex').value);
+            const inpBayar = parseInt(document.getElementById('inputBayar').value) || 0;
+            let finalBayar = 0;
+            if (idx === -1) { finalBayar = inpBayar; } else { finalBayar = oldBayarAmount + inpBayar; }
+            
+            let nd = { nomor: idx === -1 ? wajibPajak.length + 1 : wajibPajak[idx].nomor, nop: document.getElementById('inputNop').value, nik: document.getElementById('inputNik').value, nama: document.getElementById('inputNama').value, alamat: document.getElementById('inputAlamat').value, jenisTanah: document.getElementById('inputJenisTanah').value, luasTanah: parseFloat(document.getElementById('inputLuasTanah').value) || 0, luasBangunan: parseFloat(document.getElementById('inputLuasBangunan').value) || 0, pajak: parseInt(document.getElementById('inputPajak').value) };
+            
+            if (idx === -1) { wajibPajak.push(nd); } else { wajibPajak[idx] = nd; }
+            dataBayarPerTahun[tahunAktif][nd.nop] = { bayar: finalBayar, tanggal: document.getElementById('inputTanggal').value || dataBayarPerTahun[tahunAktif][nd.nop]?.tanggal || "" };
+            renderTable(wajibPajak); updateDashboardStats(); closeModal();
+        });
+        window.deleteData = function(index) {
+            if(confirm('Apakah Anda yakin ingin menghapus data ini? Data akan dihapus dari SEMUA tahun.')) {
+                const nop = wajibPajak[index].nop;
+                wajibPajak.splice(index, 1); wajibPajak.forEach((d, i) => d.nomor = i + 1);
+                Object.keys(dataBayarPerTahun).forEach(th => { if(dataBayarPerTahun[th][nop]) delete dataBayarPerTahun[th][nop]; });
+                renderTable(wajibPajak); updateDashboardStats();
+            }
+        };
+        modalOverlay.addEventListener('click', function(e) { if (e.target === modalOverlay) closeModal(); });
+
+        // 6. STATS
+        function updateDashboardStats() {
+            const td = dataBayarPerTahun[tahunAktif] || {};
+            let tw = wajibPajak.length, tm = 0, ts = 0, cl = 0, lt = 0, lb = 0, tk = 0;
+            wajibPajak.forEach(d => {
+                const p = td[d.nop] || { bayar: 0, tanggal: "" };
+                tm += p.bayar; const s = d.pajak - p.bayar; ts += s; if(s <= 0) cl++;
+                lt += parseFloat(d.luasTanah) || 0; lb += parseFloat(d.luasBangunan) || 0; tk += d.pajak;
+            });
+            document.getElementById('total-wp').textContent = tw + " Orang";
+            document.getElementById('total-masuk').textContent = formatRupiah(tm);
+            document.getElementById('total-sisa').textContent = formatRupiah(ts);
+            document.getElementById('status-lunas').textContent = cl + " Orang";
+            document.getElementById('total-objek').textContent = tw + " Unit";
+            document.getElementById('total-luas-tanah').textContent = lt.toLocaleString('id-ID') + " m²";
+            document.getElementById('total-luas-bangunan').textContent = lb.toLocaleString('id-ID') + " m²";
+            document.getElementById('total-ketetapan').textContent = formatRupiah(tk);
+        }
+
+        // INIT
+        initYearData(tahunAktif);
+        renderYearGrid();
+        updateDashboardStats();
+        renderTable(wajibPajak);
+
+    </script>
+</body>
+</html>
